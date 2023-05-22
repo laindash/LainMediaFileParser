@@ -8,8 +8,8 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , _ui(new Ui::MainWindow) {
     _ui->setupUi(this);
-    _movie = new QMovie(":/imageResource/img/lain.gif");
     _downloader = new DownloadWorker;
+    _movie = new QMovie(":/imageResource/img/lain.gif");
     _downloadThread = new QThread(this);
     QString styleSheet = "background-color: #404040;";
     this->setStyleSheet(styleSheet);
@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , _ui(new Ui::Main
     _ui->parsingAnimation->show();
     connect(_ui->btnStart, &QPushButton::clicked, this, &MainWindow::btnStart_clicked);
     connect(_ui->btnStop, &QPushButton::clicked, this, &MainWindow::btnStop_clicked);
-
+    connect(this, &MainWindow::startDownload, _downloader, &DownloadWorker::downloadMedia);
     QGroupBox *groupBox = new QGroupBox;
     QRadioButton *radioButton1 = new QRadioButton(tr("Images"));
     QRadioButton *radioButton2 = new QRadioButton(tr("Audio"));
@@ -48,19 +48,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , _ui(new Ui::Main
 
 MainWindow::~MainWindow() {
     delete _ui;
+    delete _movie;
+    delete _downloadThread;
+    delete _downloader;
 }
 
 
-void MainWindow::btnStart_clicked() { 
-    _downloader->setUrl(_ui->plainTextEdit->toPlainText());
-    _downloader->setAudioList(_ui->audioList);
+void MainWindow::btnStart_clicked() {
     _movie->start();
-    _downloader->moveToThread(_downloadThread);
-    connect(_downloadThread, &QThread::started, _downloader, &DownloadWorker::startDownload);
-    connect(_downloader, &DownloadWorker::finished, _downloadThread, &QThread::quit);
-    connect(_downloader, &DownloadWorker::finished, _downloader, &DownloadWorker::deleteLater);
-
-    _downloadThread->start();
+    QString url = _ui->plainTextEdit->toPlainText();
+    emit startDownload(url, _ui->audioList);
+   
 }
 
 void MainWindow::btnStop_clicked() {
@@ -74,3 +72,4 @@ void MainWindow::btnSettings_clicked() {
 void MainWindow::btnSave_clicked() {
 
 }
+

@@ -45,10 +45,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="download_worker.h">
+    <QtMoc Include="main_window.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="main_window.h">
+    <QtMoc Include="download_worker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -7,9 +7,9 @@
 #include <QUrl>
 #include <regex>
 
-size_t DownloadWorker::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     // Функция обратного вызова для записи данных в файл
-    std::ofstream* file = static_cast<std::ofstream*>(userp);
+    std::ofstream *file = static_cast<std::ofstream*>(userp);
     file->write(static_cast<const char*>(contents), size * nmemb);
     return size * nmemb;
 }
@@ -32,7 +32,7 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
         std::ofstream file(fullImagesPath.toStdString(), std::ofstream::binary);
         if (file.is_open()) {
             // Установка функции обратного вызова для записи данных в файл
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &DownloadWorker::writeCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
 
             // Выполнение запроса и скачивание файла
@@ -42,16 +42,18 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
             }
             // Закрытие файла
             file.close();
+            
         }
         QListWidgetItem* item = new QListWidgetItem(fileName);
         audioList->addItem(item);
         curl_easy_cleanup(curl);
+        //delete item;
     }
 
     curl_global_cleanup();
 }
 
-QString DownloadWorker::saveHtml(QString& url) {
+QString DownloadWorker::saveHtml(QString &url) {
     CURL* curl = curl_easy_init();
     QString savedPath = "C:\\Users\\User\\Desktop\\grab\\";
     if (curl) {
@@ -59,7 +61,7 @@ QString DownloadWorker::saveHtml(QString& url) {
         savedPath += "output.txt";
         std::ofstream file(savedPath.toStdString(), std::ofstream::out);
         if (file.is_open()) {
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &DownloadWorker::writeCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
             CURLcode res = curl_easy_perform(curl);
@@ -104,6 +106,7 @@ QString DownloadWorker::getLinksFromHtml(QString &savedPath) {
 
 void DownloadWorker::downloadMusic(QString &url, QListWidget *audioList) {
     QString savedPath = saveHtml(url);
+    
     savedPath = getLinksFromHtml(savedPath);
     std::ifstream fileResult(savedPath.toStdString());
     std::string line{};
@@ -116,9 +119,7 @@ void DownloadWorker::downloadMusic(QString &url, QListWidget *audioList) {
     fileResult.close();
 }
 
-void DownloadWorker::startDownload() {
-    downloadFile(_url, _list);
-    downloadMusic(_url, _list);
-    delete _list;
-    emit finished();
+void DownloadWorker::downloadMedia(QString &url, QListWidget *list) {
+    //downloadFile(url, list);
+    downloadMusic(url, list);
 }

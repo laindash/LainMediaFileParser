@@ -5,6 +5,7 @@
 #include "curl/curl.h"
 #include <QString>
 #include <QListwidget>
+#include <fstream>
 
 #ifdef _DEBUG
 #pragma comment (lib, "curl/libcurl_a_debug.lib")
@@ -21,26 +22,18 @@
 
 class DownloadWorker : public QObject {
 	Q_OBJECT
-
 public slots:
-	void startDownload();
-
+	void downloadMedia(QString &url, QListWidget *list);
 signals:
-	void finished();
 
-public:
-	size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp);
+private:
+	size_t writeToFile(void* contents, size_t size);
 	void downloadFile(QString &text, QListWidget *audioList);
 	QString saveHtml(QString& url);
 	QString getLinksFromHtml(QString &savedPath);
 	void downloadMusic(QString &url, QListWidget *audioList);
-	void setUrl(const QString& url) { _url = url; };
-	void setAudioList(QListWidget* audioList) { _list = audioList; };
-
-private:
-	QString _url{};
-	QListWidget *_list{};
 };
 
+size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
 #endif //DOWNLOAD_WORKER_H
