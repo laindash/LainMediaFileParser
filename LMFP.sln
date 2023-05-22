@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LMFP", "LMFP\LMFP.vcxproj", "{4469A6D1-A3EA-4D91-A21F-9E064E924864}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4469A6D1-A3EA-4D91-A21F-9E064E924864}.Debug|x64.ActiveCfg = Debug|x64
+		{4469A6D1-A3EA-4D91-A21F-9E064E924864}.Debug|x64.Build.0 = Debug|x64
+		{4469A6D1-A3EA-4D91-A21F-9E064E924864}.Release|x64.ActiveCfg = Release|x64
+		{4469A6D1-A3EA-4D91-A21F-9E064E924864}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AE5CCA36-F778-43DE-8FC3-F39E381B6461}
+	EndGlobalSection
+EndGlobal

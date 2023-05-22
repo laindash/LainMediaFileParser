@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/Resource"/>
+    <qresource prefix="/imageResource">
+        <file>img/lain.gif</file>
+        <file>img/btnSave.png</file>
+        <file>img/btnSettings.png</file>
+        <file>img/maxresdefault.ico</file>
+    </qresource>
+</RCC>
