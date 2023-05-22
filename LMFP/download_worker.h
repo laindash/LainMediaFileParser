@@ -23,7 +23,7 @@
 class DownloadWorker : public QObject {
 	Q_OBJECT
 public slots:
-	void downloadMedia(QString &url, QListWidget *list);
+	void downloadMedia(QString url, QListWidget *list);
 signals:
 
 private:

@@ -23,7 +23,7 @@ private slots:
     void btnSave_clicked();
    // void retranslateUi();
 signals:
-    void startDownload(QString &url, QListWidget *list);
+    void startDownload(QString url, QListWidget *list);
     //void finished();
 private:
     Ui::MainWindow *_ui{};

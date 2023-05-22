@@ -47,7 +47,6 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
         QListWidgetItem* item = new QListWidgetItem(fileName);
         audioList->addItem(item);
         curl_easy_cleanup(curl);
-        //delete item;
     }
 
     curl_global_cleanup();
@@ -119,7 +118,7 @@ void DownloadWorker::downloadMusic(QString &url, QListWidget *audioList) {
     fileResult.close();
 }
 
-void DownloadWorker::downloadMedia(QString &url, QListWidget *list) {
+void DownloadWorker::downloadMedia(QString url, QListWidget *list) {
     //downloadFile(url, list);
     downloadMusic(url, list);
 }
