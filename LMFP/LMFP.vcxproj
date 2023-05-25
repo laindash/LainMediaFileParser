@@ -93,7 +93,7 @@
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -105,7 +105,7 @@
       <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -113,7 +113,6 @@
     <ClCompile Include="checker.cpp" />
     <ClCompile Include="download_worker.cpp" />
     <ClCompile Include="settings.cpp" />
-    <ClCompile Include="vk_downloader.cpp" />
     <QtRcc Include="resource.qrc" />
     <QtUic Include="main_window.ui" />
     <QtMoc Include="main_window.h" />
@@ -126,8 +125,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="checker.h" />
-    <ClInclude Include="vk_downloader.h" />
+    <ClInclude Include="resource.h" />
     <QtMoc Include="settings.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LMFP.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="img\maxresdefault.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

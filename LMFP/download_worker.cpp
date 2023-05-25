@@ -104,8 +104,6 @@ QString DownloadWorker::saveHtml(QString &url) {
 QString DownloadWorker::getLinksFromHtml(QString &savedPath) {
     QString resultPath = savedPath + "result.txt";
     savedPath += "output.txt";
-    std::cout << savedPath.toStdString() << std::endl;
-    std::cout << resultPath.toStdString() << std::endl;
     std::ifstream file(savedPath.toStdString());
     std::ofstream outFile(resultPath.toStdString());
     //std::regex pattern("\"(https://.*\\.mp3)\".*");

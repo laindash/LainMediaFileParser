@@ -9,10 +9,12 @@
 #include <QPixmap>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QIcon>
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , _ui(new Ui::MainWindow) {
     _ui->setupUi(this);
+    setWindowIcon(QIcon(":/imageResource/img/maxresdefault.ico"));
     setWindowFlags(windowFlags() | Qt::MSWindowsFixedSizeDialogHint);
     setWindowFlags(windowFlags() & ~(Qt::WindowFullscreenButtonHint | Qt::WindowMaximizeButtonHint));
     _pixExpected = new QPixmap(":/imageResource/img/parsingExpected.jpg");
@@ -117,7 +119,7 @@ void MainWindow::btnSettings_clicked() {
     dialog->setWindowFlags(dialog->windowFlags() | Qt::MSWindowsFixedSizeDialogHint);
     dialog->setWindowFlags(dialog->windowFlags() & ~(Qt::WindowFullscreenButtonHint | Qt::WindowMaximizeButtonHint));
     dialog->setWindowModality(Qt::WindowModal);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setAttribute(Qt::WA_DeleteOnClose); //clear memory
     dialog->show();
 }
 
