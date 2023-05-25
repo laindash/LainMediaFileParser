@@ -4,8 +4,10 @@
 #include <QMainWindow>
 #include <QMovie>
 #include <QThread>
+#include <QPixmap>
+#include <QCheckBox>
+#include <vector>
 #include "download_worker.h"
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -21,15 +23,18 @@ private slots:
     void btnStop_clicked();
     void btnSettings_clicked();
     void btnSave_clicked();
+    void readyToStart();
+    void closeEvent(QCloseEvent *event);
    // void retranslateUi();
 signals:
-    void startDownload(QString url, QListWidget *list);
-    //void finished();
+    void startDownload(QString url, std::vector<QListWidget*> lists);
 private:
     Ui::MainWindow *_ui{};
     QMovie *_movie{};
+    QPixmap *_pixExpected{}, *_pixCompleted{};
     QThread *_downloadThread{};
     DownloadWorker *_downloader{};
+    QCheckBox *_imagesCBox{}, *_audioCBox{}, *_videosCBox{}, *_docsCBox{};
 };
 
 #endif //MAIN_WINDOW_H

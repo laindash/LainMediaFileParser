@@ -22,16 +22,22 @@
 
 class DownloadWorker : public QObject {
 	Q_OBJECT
+public:
+	QString _directory{};
+	bool _parsingIsGood{};
+	bool _imagesSelected{};
+	bool _audioSelected{};
+	bool _videosSelected{};
+	bool _docsSelected{};
 public slots:
-	void downloadMedia(QString url, QListWidget *list);
+	void downloadMedia(QString url, std::vector<QListWidget*> lists);
 signals:
-
+	void downloadFinished();
 private:
-	size_t writeToFile(void* contents, size_t size);
-	void downloadFile(QString &text, QListWidget *audioList);
-	QString saveHtml(QString& url);
+	void downloadFile(QString &text, QListWidget *list);
+	QString saveHtml(QString &url);
 	QString getLinksFromHtml(QString &savedPath);
-	void downloadMusic(QString &url, QListWidget *audioList);
+	void downloadAnything(QString &url, QListWidget *audioList);
 };
 
 size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp);

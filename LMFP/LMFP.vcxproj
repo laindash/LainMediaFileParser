@@ -110,16 +110,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="checker.cpp" />
     <ClCompile Include="download_worker.cpp" />
+    <ClCompile Include="settings.cpp" />
     <ClCompile Include="vk_downloader.cpp" />
     <QtRcc Include="resource.qrc" />
     <QtUic Include="main_window.ui" />
     <QtMoc Include="main_window.h" />
     <ClCompile Include="main_window.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="settings.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="download_worker.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="checker.h" />
+    <ClInclude Include="vk_downloader.h" />
+    <QtMoc Include="settings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

@@ -1,10 +1,12 @@
 // download functions
 #include "download_worker.h"
+#include "checker.h"
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <QFileInfo>
 #include <QUrl>
+#include <QDir>
 #include <regex>
 
 size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
@@ -14,7 +16,7 @@ size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     return size * nmemb;
 }
 
-void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
+void DownloadWorker::downloadFile(QString &text, QListWidget *list) {
 	CURL* curl;
     CURLcode res;
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -22,14 +24,22 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
     if (curl) {
         // Установка URL-адреса для скачивания файла
         curl_easy_setopt(curl, CURLOPT_URL, text.toUtf8().constData());
-        QString savedImagesPath = "C:\\Users\\User\\Desktop\\grab\\music\\";
-        // Получение имени файла из URL-адреса
         QUrl url(text);
         QString fileName = QFileInfo(url.path()).fileName();
-        QString fullImagesPath = savedImagesPath + fileName;
+        QString fullPath{};
 
+        if (_directory.isEmpty()) {
+            QString savedPath = "grab";
+            QDir dir(savedPath);
+            if (!dir.exists()) {
+                dir.mkpath(".");
+            }         
+            fullPath = savedPath + QDir::separator() + fileName;
+        } else {
+            fullPath = _directory + QDir::separator() + fileName;
+        }
         // Открытие файла для записи
-        std::ofstream file(fullImagesPath.toStdString(), std::ofstream::binary);
+        std::ofstream file(fullPath.toStdString(), std::ofstream::binary);
         if (file.is_open()) {
             // Установка функции обратного вызова для записи данных в файл
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
@@ -42,10 +52,10 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
             }
             // Закрытие файла
             file.close();
-            
+            _parsingIsGood = true;
         }
         QListWidgetItem* item = new QListWidgetItem(fileName);
-        audioList->addItem(item);
+        list->addItem(item);
         curl_easy_cleanup(curl);
     }
 
@@ -54,10 +64,21 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *audioList) {
 
 QString DownloadWorker::saveHtml(QString &url) {
     CURL* curl = curl_easy_init();
-    QString savedPath = "C:\\Users\\User\\Desktop\\grab\\";
+    QString fullPath{}, savedPath{};
+
+    if (_directory.isEmpty()) {
+        QString temp = "grab";
+        QDir dir(temp);
+        if (!dir.exists()) {
+            dir.mkpath(".");
+        }         
+        fullPath = temp + QDir::separator();
+    } else {
+        fullPath = _directory + QDir::separator();
+    }
+    savedPath = fullPath + "output.txt";
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url.toUtf8().constData());
-        savedPath += "output.txt";
         std::ofstream file(savedPath.toStdString(), std::ofstream::out);
         if (file.is_open()) {
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
@@ -72,23 +93,24 @@ QString DownloadWorker::saveHtml(QString &url) {
         } else {
             std::cerr << "Failed to open file for writing: " << savedPath.toStdString() << std::endl;
         }
-        //savedPath = getLinksFromHtml(savedPath);
-        //downloadMusic(savedPath);
         curl_easy_cleanup(curl);
 
     } else {
         std::cerr << "Failed to initialize libcurl" << std::endl;
     }
-    return savedPath;
+    return fullPath;
 }
 
 QString DownloadWorker::getLinksFromHtml(QString &savedPath) {
+    QString resultPath = savedPath + "result.txt";
+    savedPath += "output.txt";
+    std::cout << savedPath.toStdString() << std::endl;
+    std::cout << resultPath.toStdString() << std::endl;
     std::ifstream file(savedPath.toStdString());
-    QString resultPath = "C:\\Users\\User\\Desktop\\grab\\result.txt";
     std::ofstream outFile(resultPath.toStdString());
     //std::regex pattern("\"(https://.*\\.mp3)\".*");
-    std::regex pattern("\"(https://[^\"]+\\.mp3[^\"]*)\"");
-    std::string line;
+    std::regex pattern("(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d/\\-\\.]+)");
+    std::string line{};
 
     while (std::getline(file, line)) {
         std::sregex_iterator iter(line.begin(), line.end(), pattern);
@@ -103,7 +125,7 @@ QString DownloadWorker::getLinksFromHtml(QString &savedPath) {
     return resultPath;
 }
 
-void DownloadWorker::downloadMusic(QString &url, QListWidget *audioList) {
+void DownloadWorker::downloadAnything(QString &url, QListWidget *audioList) {
     QString savedPath = saveHtml(url);
     
     savedPath = getLinksFromHtml(savedPath);
@@ -118,7 +140,20 @@ void DownloadWorker::downloadMusic(QString &url, QListWidget *audioList) {
     fileResult.close();
 }
 
-void DownloadWorker::downloadMedia(QString url, QListWidget *list) {
-    //downloadFile(url, list);
-    downloadMusic(url, list);
+void DownloadWorker::downloadMedia(QString url, std::vector<QListWidget*> lists) {
+    if (_imagesSelected) {
+        //downloadImages(url, lists[IMAGES]);
+    }
+    if (_audioSelected) {
+        //downloadAudio(url, lists[AUDIO]);
+    }
+    if (_videosSelected) {
+       // downloadVideos(url, lists[VIDEOS]);
+    }
+    if (_docsSelected) {
+        //downloadDocs(url, lists[DOCS]);
+    } else {
+        downloadAnything(url, lists[ALL]);
+    }
+    emit downloadFinished();
 }
