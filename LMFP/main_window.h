@@ -8,6 +8,8 @@
 #include <QCheckBox>
 #include <vector>
 #include "download_worker.h"
+#include "settings.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -34,7 +36,7 @@ private:
     QPixmap *_pixExpected{}, *_pixCompleted{};
     QThread *_downloadThread{};
     DownloadWorker *_downloader{};
-    QCheckBox *_imagesCBox{}, *_audioCBox{}, *_videosCBox{}, *_docsCBox{};
+    Settings *_dialog{};
 };
 
 #endif //MAIN_WINDOW_H

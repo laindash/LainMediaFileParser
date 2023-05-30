@@ -24,11 +24,13 @@ class DownloadWorker : public QObject {
 	Q_OBJECT
 public:
 	QString _directory{};
-	bool _parsingIsGood{};
-	bool _imagesSelected{};
-	bool _audioSelected{};
-	bool _videosSelected{};
-	bool _docsSelected{};
+	bool _parsingIsGood{}, _stopDownload{}, _imagesSelected{}, _audioSelected{}, _videosSelected{}, _docsSelected{};
+	std::string _imagesExtensions{}, _audioExtensions{}, _videosExtensions{}, _docsExtensions{};
+public:
+	void setDefaultImages();
+	void setDefaultAudio();
+	void setDefaultVideos();
+	void setDefaultDocs();
 public slots:
 	void downloadMedia(QString url, std::vector<QListWidget*> lists);
 signals:
@@ -37,9 +39,8 @@ private:
 	void downloadFile(QString &text, QListWidget *list);
 	QString saveHtml(QString &url);
 	QString getLinksFromHtml(QString &savedPath);
-	void downloadAnything(QString &url, QListWidget *audioList);
+	
 };
 
-size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
 #endif //DOWNLOAD_WORKER_H

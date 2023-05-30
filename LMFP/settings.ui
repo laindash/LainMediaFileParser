@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>558</width>
+    <width>525</width>
     <height>476</height>
    </rect>
   </property>
@@ -14,57 +14,11 @@
    <string>Settings</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QComboBox" name="mediatoolsChoice">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>73</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <italic>false</italic>
-      <bold>false</bold>
-      <underline>false</underline>
-      <strikeout>false</strikeout>
-      <kerning>true</kerning>
-     </font>
-    </property>
-    <item>
-     <property name="text">
-      <string>Images</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Audio</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Videos</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Docs</string>
-     </property>
-    </item>
-   </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>170</y>
+      <x>160</x>
+      <y>10</y>
       <width>261</width>
       <height>41</height>
      </rect>
@@ -78,13 +32,13 @@
      <string>Valid file extensions</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="validExtensions">
+   <widget class="QPlainTextEdit" name="audioExt">
     <property name="geometry">
      <rect>
-      <x>99</x>
-      <y>218</y>
+      <x>110</x>
+      <y>160</y>
       <width>371</width>
-      <height>201</height>
+      <height>81</height>
      </rect>
     </property>
     <property name="backgroundVisible">
@@ -94,7 +48,139 @@
      <bool>false</bool>
     </property>
     <property name="placeholderText">
-     <string>Enter (through ;) file extensions for parsing. Example: .gif; .png;</string>
+     <string>Enter via | , without spaces or dots, file extensions for parsing. Example: mp3|wav|ogg</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="imagesExt">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>60</y>
+      <width>371</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="backgroundVisible">
+     <bool>false</bool>
+    </property>
+    <property name="centerOnScroll">
+     <bool>false</bool>
+    </property>
+    <property name="placeholderText">
+     <string>Enter via | , without spaces or dots, file extensions for parsing. Example: gif|png|jpg</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="videosExt">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>260</y>
+      <width>371</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="backgroundVisible">
+     <bool>false</bool>
+    </property>
+    <property name="centerOnScroll">
+     <bool>false</bool>
+    </property>
+    <property name="placeholderText">
+     <string>Enter via | , without spaces or dots, file extensions for parsing. Example: mp4|avi|webm</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="docsExt">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>360</y>
+      <width>371</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="backgroundVisible">
+     <bool>false</bool>
+    </property>
+    <property name="centerOnScroll">
+     <bool>false</bool>
+    </property>
+    <property name="placeholderText">
+     <string>Enter via | , without spaces or dots, file extensions for parsing. Example: pdf|html|js</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Images</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>180</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Audio</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>280</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Videos</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>380</y>
+      <width>71</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>22</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Docs</string>
     </property>
    </widget>
   </widget>

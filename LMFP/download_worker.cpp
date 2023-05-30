@@ -38,6 +38,12 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *list) {
         } else {
             fullPath = _directory + QDir::separator() + fileName;
         }
+        int counter = 1;
+        while (QFile::exists(fullPath)) {
+            QString uniqueFileName = QString::number(counter) + "_" + fileName;
+            fullPath = (_directory.isEmpty() ? "grab" : _directory) + QDir::separator() + uniqueFileName;
+            counter++;
+        }
         // Открытие файла для записи
         std::ofstream file(fullPath.toStdString(), std::ofstream::binary);
         if (file.is_open()) {
@@ -54,7 +60,7 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *list) {
             file.close();
             _parsingIsGood = true;
         }
-        QListWidgetItem* item = new QListWidgetItem(fileName);
+        QListWidgetItem *item = new QListWidgetItem(fileName);
         list->addItem(item);
         curl_easy_cleanup(curl);
     }
@@ -63,7 +69,7 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *list) {
 }
 
 QString DownloadWorker::saveHtml(QString &url) {
-    CURL* curl = curl_easy_init();
+    CURL *curl = curl_easy_init();
     QString fullPath{}, savedPath{};
 
     if (_directory.isEmpty()) {
@@ -106,52 +112,93 @@ QString DownloadWorker::getLinksFromHtml(QString &savedPath) {
     savedPath += "output.txt";
     std::ifstream file(savedPath.toStdString());
     std::ofstream outFile(resultPath.toStdString());
-    //std::regex pattern("\"(https://.*\\.mp3)\".*");
-    std::regex pattern("(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d/\\-\\.]+)");
+
+    std::regex pattern("(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\.\\w+)");
+    
     std::string line{};
-
     while (std::getline(file, line)) {
-        std::sregex_iterator iter(line.begin(), line.end(), pattern);
-        std::sregex_iterator end;
+        std::smatch match;
+        std::regex_search(line, match, pattern);
 
-        while (iter != end) {
-            outFile << (*iter)[1].str() << std::endl;
-            ++iter;
+        while (std::regex_search(line, match, pattern)) {
+            outFile << match[1].str() << std::endl;
+            line = match.suffix();
         }
     }
     file.close();
     return resultPath;
 }
 
-void DownloadWorker::downloadAnything(QString &url, QListWidget *audioList) {
+void DownloadWorker::downloadMedia(QString url, std::vector<QListWidget*> lists) {
     QString savedPath = saveHtml(url);
-    
+            
     savedPath = getLinksFromHtml(savedPath);
     std::ifstream fileResult(savedPath.toStdString());
     std::string line{};
+    std::regex pattern{};
+    QString urlFromResult{};
+    bool fileIsDownloaded{};
 
     while (std::getline(fileResult, line) && !fileResult.eof()) {
-        QString urlFromResult = QString::fromStdString(line);
-        downloadFile(urlFromResult, audioList);
-    }
+        if (!_stopDownload) {
+            fileIsDownloaded = false;
+            urlFromResult = QString::fromStdString(line);
+            if (_imagesSelected && !fileIsDownloaded) {
+                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _imagesExtensions + ')';
+                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
+                    downloadFile(urlFromResult, lists[IMAGES]);
+                    fileIsDownloaded = true;
+                }
+            }
+            if (_audioSelected && !fileIsDownloaded) {
+                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _audioExtensions + ')';
+                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
+                    downloadFile(urlFromResult, lists[AUDIO]);
+                    fileIsDownloaded = true;
+                }
+            }
+            if (_videosSelected && !fileIsDownloaded) {
+                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _videosExtensions + ')';
+                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
+                    downloadFile(urlFromResult, lists[VIDEOS]);
+                    fileIsDownloaded = true;
+                }
+            }
+            if (_docsSelected && !fileIsDownloaded) {
+                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _docsExtensions + ')';
+                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
+                    downloadFile(urlFromResult, lists[DOCS]);
+                    fileIsDownloaded = true;
+                }
+            }
+            else if (!(_imagesSelected || _audioSelected || _videosSelected || _docsSelected)) {
+                downloadFile(urlFromResult, lists[ALL]);
+            }
 
+        }   
+    }
     fileResult.close();
+    emit downloadFinished();
 }
 
-void DownloadWorker::downloadMedia(QString url, std::vector<QListWidget*> lists) {
-    if (_imagesSelected) {
-        //downloadImages(url, lists[IMAGES]);
-    }
-    if (_audioSelected) {
-        //downloadAudio(url, lists[AUDIO]);
-    }
-    if (_videosSelected) {
-       // downloadVideos(url, lists[VIDEOS]);
-    }
-    if (_docsSelected) {
-        //downloadDocs(url, lists[DOCS]);
-    } else {
-        downloadAnything(url, lists[ALL]);
-    }
-    emit downloadFinished();
+void DownloadWorker::setDefaultImages() {
+    _imagesExtensions = "(gif|bmp|jpg|png|jpeg|ico|tiff|tif|webp|eps|psd|cdr|raw)";
+}
+
+void DownloadWorker::setDefaultAudio() {
+    _audioExtensions = "(aac|ac3|aif|aiff|amr|aob|ape|asf|aud|awb|bin|bwg|cdr|flac|gpx|ics|iff\
+						|m|m3u|m3u8|m4a|m4b|m4p|m4r|mid|midi|mod|mp3|mpa|mpp|msc|msv|mts|nkc\
+						|ogg|ps|ra|ram|sdf|sib|sln|spl|srt|temp|vb|wav|wave|wm|wma|wpd|xsb|xwb)";
+}
+
+void DownloadWorker::setDefaultVideos() {
+    _videosExtensions = "(3g2|3gp|3gp2|3gpp|3gpp2|asf|asx|avi|bin|dat|drv|f4v|flv|gtp|h264|m4v\
+						|mkv|mod|moov|mov|mp4|mpeg|mpg|mts|rm|rmvb|spl|srt|stl|swf|ts|vcd|vid|vob|webm|wm|wmv|yuv)";
+}
+
+void DownloadWorker::setDefaultDocs() {
+    _docsExtensions = "(asp|cdd|cpp|doc|docm|docx|dot|dotx|epub|fb2|gpx|ibooks|indd|kdc|key|kml\
+						|mdb|mdf|mobi|mso|ods|odt|one|oxps|pages|pdf|pkg|pl|pot|potm|potx|pps|ppsm\
+						|ppsx|ppt|pptm|pptx|ps|pub|rtf|sdf|sgml|sldm|snb|wpd|wps|xar|xlr|xls|xlsb\
+						|xlsm|xlsx|xlt|xltm|xltx|xps|html|js|css)";
 }

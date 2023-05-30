@@ -23,9 +23,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <QtRcc Include="resource.qrc">
-      <Filter>Resource Files</Filter>
-    </QtRcc>
     <QtUic Include="main_window.ui">
       <Filter>Form Files</Filter>
     </QtUic>
@@ -80,5 +77,10 @@
     <Image Include="img\maxresdefault.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="resource.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
   </ItemGroup>
 </Project>

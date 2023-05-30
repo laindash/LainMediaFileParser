@@ -17,6 +17,10 @@ class Settings : public QMainWindow {
 public:
 	Settings(QWidget *parent = nullptr);
 	~Settings();
+	QString getImagesExtensions();
+	QString getAudioExtensions();
+	QString getVideosExtensions();
+	QString getDocsExtensions();
 
 private:
 	Ui::Settings *_uiSettings{};
