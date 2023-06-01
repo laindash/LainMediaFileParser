@@ -187,7 +187,6 @@ void MainWindow::btnSettings_clicked() {
 
 void MainWindow::btnSave_clicked() {
     _downloader->_directory = QFileDialog::getExistingDirectory(this, tr("Select a directory to save"), QDir::homePath());
-    std::cout << _downloader->_directory.toStdString() << std::endl;
 }
 
 void MainWindow::readyToStart() { 
