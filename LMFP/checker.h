@@ -3,6 +3,7 @@
 #include <QString>
 
 bool checkUrl(const QString &url);
+bool checkExtensions(const std::string &ext);
 
 enum MEDIA_LIST
 {

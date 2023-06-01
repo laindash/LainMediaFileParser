@@ -83,7 +83,12 @@ void MainWindow::btnStart_clicked() {
             _downloader->_imagesSelected = true;
             std::string ext = _dialog->getImagesExtensions().toStdString();
             if (!(ext.empty())) {
-                _downloader->_imagesExtensions = '(' + ext + ')';
+                if (checkExtensions(ext)) {
+                    _downloader->_imagesExtensions = '(' + ext + ')';
+                }
+                else {
+                    QMessageBox::critical(this, "Error", "Image extension is incorrect!");
+                }
             }
             else {
                 _downloader->setDefaultImages();
@@ -97,7 +102,12 @@ void MainWindow::btnStart_clicked() {
             _downloader->_audioSelected = true;
             std::string ext = _dialog->getAudioExtensions().toStdString();
             if (!(ext.empty())) {
-                _downloader->_audioExtensions = '(' + ext + ')';
+                if (checkExtensions(ext)) {
+                    _downloader->_audioExtensions = '(' + ext + ')';
+                }
+                else {
+                    QMessageBox::critical(this, "Error", "Audio extension is incorrect!");
+                }
             }
             else {
                 _downloader->setDefaultAudio();
@@ -111,7 +121,12 @@ void MainWindow::btnStart_clicked() {
             _downloader->_videosSelected = true;
             std::string ext = _dialog->getVideosExtensions().toStdString();
             if (!(ext.empty())) {
-                _downloader->_videosExtensions = '(' + ext + ')';
+                if (checkExtensions(ext)) {
+                    _downloader->_videosExtensions = '(' + ext + ')';
+                }
+                else {
+                    QMessageBox::critical(this, "Error", "Videos extension is incorrect!");
+                }
             }
             else {
                 _downloader->setDefaultVideos();
@@ -125,7 +140,12 @@ void MainWindow::btnStart_clicked() {
             _downloader->_docsSelected = true;
             std::string ext = _dialog->getDocsExtensions().toStdString();
             if (!(ext.empty())) {
-                _downloader->_docsExtensions = '(' + ext + ')';
+                if (checkExtensions(ext)) {
+                    _downloader->_docsExtensions = '(' + ext + ')';
+                }
+                else {
+                    QMessageBox::critical(this, "Error", "Docs extension is incorrect!");
+                }
             }
             else {
                 _downloader->setDefaultDocs();
@@ -139,6 +159,8 @@ void MainWindow::btnStart_clicked() {
     } 
     else {
         QMessageBox::critical(this, "Error", "URL not entered or invalid!");
+        _ui->parsingAnimation->clear();
+        _ui->parsingAnimation->setPixmap(*_pixExpected);
     }
 }
 
@@ -165,6 +187,7 @@ void MainWindow::btnSettings_clicked() {
 
 void MainWindow::btnSave_clicked() {
     _downloader->_directory = QFileDialog::getExistingDirectory(this, tr("Select a directory to save"), QDir::homePath());
+    std::cout << _downloader->_directory.toStdString() << std::endl;
 }
 
 void MainWindow::readyToStart() { 
