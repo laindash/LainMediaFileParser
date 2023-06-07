@@ -4,25 +4,26 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <QMessageBox>
 #include <QFileInfo>
 #include <QUrl>
 #include <QDir>
 #include <regex>
 
 size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-    // Функция обратного вызова для записи данных в файл
+    // callback function for writing data to a file
     std::ofstream *file = static_cast<std::ofstream*>(userp);
     file->write(static_cast<const char*>(contents), size * nmemb);
     return size * nmemb;
 }
 
-void DownloadWorker::downloadFile(QString &text, QListWidget *list) {
+void DownloadWorker::downloadFile(QString &text) {
 	CURL* curl;
     CURLcode res;
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
     if (curl) {
-        // Установка URL-адреса для скачивания файла
+        // setting the file download URL
         curl_easy_setopt(curl, CURLOPT_URL, text.toUtf8().constData());
         QUrl url(text);
         QString fileName = QFileInfo(url.path()).fileName();
@@ -35,36 +36,32 @@ void DownloadWorker::downloadFile(QString &text, QListWidget *list) {
                 dir.mkpath(".");
             }         
             fullPath = savedPath + QDir::separator() + fileName;
-        } else {
+        } 
+        else {
             fullPath = _directory + QDir::separator() + fileName;
         }
         int counter = 1;
         while (QFile::exists(fullPath)) {
-            QString uniqueFileName = QString::number(counter) + "_" + fileName;
+            QString uniqueFileName = fileName + '(' + QString::number(counter) + ')';
             fullPath = (_directory.isEmpty() ? "grab" : _directory) + QDir::separator() + uniqueFileName;
             counter++;
         }
-        // Открытие файла для записи
+        // open file for writing
         std::ofstream file(fullPath.toStdString(), std::ofstream::binary);
         if (file.is_open()) {
-            // Установка функции обратного вызова для записи данных в файл
+            // setting a callback to write data to a file
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
 
-            // Выполнение запроса и скачивание файла
+            // making a request and downloading a file
             res = curl_easy_perform(curl);
             if (res != CURLE_OK) {
                 std::cerr << "Failed to download file: " << curl_easy_strerror(res) << std::endl;
             }
-            // Закрытие файла
             file.close();
-            _parsingIsGood = true;
         }
-        QListWidgetItem *item = new QListWidgetItem(fileName);
-        list->addItem(item);
         curl_easy_cleanup(curl);
     }
-
     curl_global_cleanup();
 }
 
@@ -79,7 +76,8 @@ QString DownloadWorker::saveHtml(QString &url) {
             dir.mkpath(".");
         }         
         fullPath = temp + QDir::separator();
-    } else {
+    } 
+    else {
         fullPath = _directory + QDir::separator();
     }
     savedPath = fullPath + "output.txt";
@@ -92,16 +90,18 @@ QString DownloadWorker::saveHtml(QString &url) {
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
             CURLcode res = curl_easy_perform(curl);
             if (res != CURLE_OK) {
+                _htmlIsBad = true;
                 std::cerr << "Failed to retrieve HTML: " << curl_easy_strerror(res) << std::endl;
             }
-
             file.close();
-        } else {
+        } 
+        else {
             std::cerr << "Failed to open file for writing: " << savedPath.toStdString() << std::endl;
         }
         curl_easy_cleanup(curl);
 
-    } else {
+    }
+    else {
         std::cerr << "Failed to initialize libcurl" << std::endl;
     }
     return fullPath;
@@ -131,11 +131,61 @@ QString DownloadWorker::getLinksFromHtml(QString &savedPath) {
 
 void DownloadWorker::downloadMedia(QString url, std::vector<QListWidget*> lists) {
     QString savedPath = saveHtml(url);
-            
     savedPath = getLinksFromHtml(savedPath);
+
+    std::ifstream fileCount(savedPath.toStdString());
+    std::string lineForCount{};
+    std::regex patternImages{}, patternAudio{}, patternVideos{}, patternDocs{};
+    int imagesAllCount(0), audioAllCount(0), videosAllCount(0), docsAllCount(0), allAllCount(0); 
+    patternImages = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _imagesExtensions + ')';
+    patternAudio = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _audioExtensions + ')';
+    patternVideos = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _videosExtensions + ')';
+    patternDocs = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _docsExtensions + ')';
+
+    while (std::getline(fileCount, lineForCount) && !fileCount.eof()) {
+        if (std::regex_match(lineForCount, patternImages)) {
+            imagesAllCount++;
+            allAllCount++;
+            if (_imagesSelected) {
+                _parsingIsGood = true;
+            }
+        }
+        else if (std::regex_match(lineForCount, patternAudio)) {
+            audioAllCount++;
+            allAllCount++;
+            if (_audioSelected) {
+                _parsingIsGood = true;
+            }
+        }
+        else if (std::regex_match(lineForCount, patternVideos)) {
+            videosAllCount++;
+            allAllCount++;
+            if (_videosSelected) {
+                _parsingIsGood = true;
+            }
+        }
+        else if (std::regex_match(lineForCount, patternDocs)) {
+            docsAllCount++;
+            allAllCount++;
+            if (_docsSelected) {
+                _parsingIsGood = true;
+            }
+        }
+    }
+    fileCount.close();
+    _imagesAllCount = imagesAllCount;
+    _audioAllCount = audioAllCount;
+    _videosAllCount = videosAllCount;
+    _docsAllCount = docsAllCount;
+    _allAllCount = allAllCount;
+    emit imagesAllCountChanged();
+    emit audioAllCountChanged();
+    emit videosAllCountChanged();
+    emit docsAllCountChanged();
+    emit allAllCountChanged();
+
     std::ifstream fileResult(savedPath.toStdString());
     std::string line{};
-    std::regex pattern{};
     QString urlFromResult{};
     bool fileIsDownloaded{};
 
@@ -144,37 +194,69 @@ void DownloadWorker::downloadMedia(QString url, std::vector<QListWidget*> lists)
             fileIsDownloaded = false;
             urlFromResult = QString::fromStdString(line);
             if (_imagesSelected && !fileIsDownloaded) {
-                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _imagesExtensions + ')';
-                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
-                    downloadFile(urlFromResult, lists[IMAGES]);
+                if (std::regex_match(urlFromResult.toStdString(), patternImages)) {
+                    downloadFile(urlFromResult);
                     fileIsDownloaded = true;
+                    QUrl urlChecker(urlFromResult);
+                    QString fileName = QFileInfo(urlChecker.path()).fileName(); 
+                    QListWidgetItem *itemImages = new QListWidgetItem(fileName);
+                    QListWidgetItem *itemAll = new QListWidgetItem(fileName); 
+                    lists[IMAGES]->addItem(itemImages);
+                    lists[ALL]->addItem(itemAll);
+                    _imagesCount++;
+                    _allCount++;
+                    emit imagesCountChanged();
+                    emit allCountChanged();
                 }
             }
             if (_audioSelected && !fileIsDownloaded) {
-                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _audioExtensions + ')';
-                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
-                    downloadFile(urlFromResult, lists[AUDIO]);
+                if (std::regex_match(urlFromResult.toStdString(), patternAudio)) {
+                    downloadFile(urlFromResult);
                     fileIsDownloaded = true;
+                    QUrl urlChecker(urlFromResult);
+                    QString fileName = QFileInfo(urlChecker.path()).fileName();
+                    QListWidgetItem *itemAudio = new QListWidgetItem(fileName);
+                    QListWidgetItem *itemAll = new QListWidgetItem(fileName);                     
+                    lists[AUDIO]->addItem(itemAudio);
+                    lists[ALL]->addItem(itemAll);
+                    _audioCount++;
+                    _allCount++;
+                    emit audioCountChanged();
+                    emit allCountChanged();
                 }
             }
             if (_videosSelected && !fileIsDownloaded) {
-                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _videosExtensions + ')';
-                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
-                    downloadFile(urlFromResult, lists[VIDEOS]);
+                if (std::regex_match(urlFromResult.toStdString(), patternVideos)) {
+                    downloadFile(urlFromResult);
                     fileIsDownloaded = true;
+                    QUrl urlChecker(urlFromResult);
+                    QString fileName = QFileInfo(urlChecker.path()).fileName(); 
+                    QListWidgetItem *itemVideos = new QListWidgetItem(fileName);
+                    QListWidgetItem *itemAll = new QListWidgetItem(fileName); 
+                    lists[VIDEOS]->addItem(itemVideos);
+                    lists[ALL]->addItem(itemAll);
+                    _videosCount++;
+                    _allCount++;
+                    emit videosCountChanged();
+                    emit allCountChanged();
                 }
             }
             if (_docsSelected && !fileIsDownloaded) {
-                pattern = "(https?://[\\w\\-\\.]+\\.\\w+\\.\\w+/[\\w\\d\\/\\-\\.]+\\." + _docsExtensions + ')';
-                if (std::regex_match(urlFromResult.toStdString(), pattern)) {
-                    downloadFile(urlFromResult, lists[DOCS]);
+                if (std::regex_match(urlFromResult.toStdString(), patternDocs)) {
+                    downloadFile(urlFromResult);
                     fileIsDownloaded = true;
+                    QUrl urlChecker(urlFromResult);
+                    QString fileName = QFileInfo(urlChecker.path()).fileName(); 
+                    QListWidgetItem *itemDocs= new QListWidgetItem(fileName);
+                    QListWidgetItem *itemAll = new QListWidgetItem(fileName); 
+                    lists[DOCS]->addItem(itemDocs);
+                    lists[ALL]->addItem(itemAll);
+                    _docsCount++;
+                    _allCount++;
+                    emit docsCountChanged();
+                    emit allCountChanged();
                 }
             }
-            else if (!(_imagesSelected || _audioSelected || _videosSelected || _docsSelected)) {
-                downloadFile(urlFromResult, lists[ALL]);
-            }
-
         }   
     }
     fileResult.close();
@@ -201,4 +283,27 @@ void DownloadWorker::setDefaultDocs() {
 						|mdb|mdf|mobi|mso|ods|odt|one|oxps|pages|pdf|pkg|pl|pot|potm|potx|pps|ppsm\
 						|ppsx|ppt|pptm|pptx|ps|pub|rtf|sdf|sgml|sldm|snb|wpd|wps|xar|xlr|xls|xlsb\
 						|xlsm|xlsx|xlt|xltm|xltx|xps|html|js|css)";
+}
+
+void DownloadWorker::clearCounters() {
+    _imagesCount = 0;
+    _audioCount = 0;
+    _videosCount = 0;
+    _docsCount = 0;
+    _allCount = 0;
+    _imagesAllCount = 0;
+    _audioAllCount = 0;
+    _videosAllCount = 0;
+    _docsAllCount = 0;
+    _allAllCount = 0;
+    emit imagesCountChanged();
+    emit audioCountChanged();
+    emit videosCountChanged();
+    emit docsCountChanged();
+    emit allCountChanged();
+    emit imagesAllCountChanged();
+    emit audioAllCountChanged();
+    emit videosAllCountChanged();
+    emit docsAllCountChanged();
+    emit allAllCountChanged();
 }

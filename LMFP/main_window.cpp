@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , _ui(new Ui::Main
     _downloader = new DownloadWorker;
     connect(this, &MainWindow::startDownload, _downloader, &DownloadWorker::downloadMedia);
     _downloader->moveToThread(_downloadThread);
-    _downloadThread->start();
+    
     connect(_downloader, &DownloadWorker::downloadFinished, this, &MainWindow::readyToStart);
 
     connect(_ui->btnStart, &QPushButton::clicked, this, &MainWindow::btnStart_clicked);
@@ -35,10 +35,37 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) , _ui(new Ui::Main
     connect(_ui->btnSave, &QPushButton::clicked, this, &MainWindow::btnSave_clicked);
     connect(_ui->btnSettings, &QPushButton::clicked, this, &MainWindow::btnSettings_clicked);
 
+    connect(_downloader, &DownloadWorker::imagesCountChanged, this, &MainWindow::updateImagesCounter);
+    connect(_downloader, &DownloadWorker::audioCountChanged, this, &MainWindow::updateAudioCounter);
+    connect(_downloader, &DownloadWorker::videosCountChanged, this, &MainWindow::updateVideosCounter);
+    connect(_downloader, &DownloadWorker::docsCountChanged, this, &MainWindow::updateDocsCounter);
+    connect(_downloader, &DownloadWorker::allCountChanged, this, &MainWindow::updateAllCounter);
+    connect(_downloader, &DownloadWorker::imagesAllCountChanged, this, &MainWindow::updateImagesAllCounter);
+    connect(_downloader, &DownloadWorker::audioAllCountChanged, this, &MainWindow::updateAudioAllCounter);
+    connect(_downloader, &DownloadWorker::videosAllCountChanged, this, &MainWindow::updateVideosAllCounter);
+    connect(_downloader, &DownloadWorker::docsAllCountChanged, this, &MainWindow::updateDocsAllCounter);
+    connect(_downloader, &DownloadWorker::allAllCountChanged, this, &MainWindow::updateAllAllCounter);
+
     QPixmap pixSave(":/imageResource/img/btnSave.png");
     _ui->btnSave->setIcon(pixSave);
     _ui->btnSave->setStyleSheet("QPushButton { background-color: transparent; border: none; }");
     _ui->btnSave->setIconSize(_ui->btnSave->size());
+
+    _ui->imagesAllCount->setAlignment(Qt::AlignCenter);
+    _ui->audioAllCount->setAlignment(Qt::AlignCenter);
+    _ui->videosAllCount->setAlignment(Qt::AlignCenter);
+    _ui->docsAllCount->setAlignment(Qt::AlignCenter);
+    _ui->allAllCount->setAlignment(Qt::AlignCenter);
+    _ui->imagesCount->setAlignment(Qt::AlignCenter);
+    _ui->audioCount->setAlignment(Qt::AlignCenter);
+    _ui->videosCount->setAlignment(Qt::AlignCenter);
+    _ui->docsCount->setAlignment(Qt::AlignCenter);
+    _ui->allCount->setAlignment(Qt::AlignCenter);
+    _ui->separator1->setAlignment(Qt::AlignCenter);
+    _ui->separator2->setAlignment(Qt::AlignCenter);
+    _ui->separator3->setAlignment(Qt::AlignCenter);
+    _ui->separator4->setAlignment(Qt::AlignCenter);
+    _ui->separator5->setAlignment(Qt::AlignCenter);
 
     _dialog = new Settings(this);
     QPixmap pixSettings(":/imageResource/img/btnSettings.png");
@@ -56,29 +83,29 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::btnStart_clicked() {
-    _downloader->_stopDownload = false;
-    _downloader->_parsingIsGood = false;
+    _ui->btnStart->setEnabled(false);
+    _downloader->clearCounters();
     _ui->imagesList->clear();
     _ui->audioList->clear();
     _ui->videosList->clear();
     _ui->docsList->clear();
     _ui->allList->clear();
-    QString url = _ui->inputUrl->text();
-    bool validUrl = true;
-    validUrl = checkUrl(url);
+    _downloader->_stopDownload = false;
+    _downloader->_parsingIsGood = false;
+    _downloader->_htmlIsBad = false;  
 
-    if (!url.isEmpty() && validUrl) {
-        _ui->parsingAnimation->setMovie(_movie);
-        _movie->start();
-        _ui->btnStart->setEnabled(false);
-
-        std::vector<QListWidget*> mediaLists{};
+    std::vector<QListWidget*> mediaLists{};
         mediaLists.push_back(_ui->imagesList);
         mediaLists.push_back(_ui->audioList);
         mediaLists.push_back(_ui->videosList);
         mediaLists.push_back(_ui->docsList);
         mediaLists.push_back(_ui->allList);
 
+    QString url = _ui->inputUrl->text();
+    bool validUrl = true, readyToStart = true;
+    validUrl = checkUrl(url);
+
+    if (!url.isEmpty() && validUrl) {
         if (_ui->imagesCBox->isChecked()) {
             _downloader->_imagesSelected = true;
             std::string ext = _dialog->getImagesExtensions().toStdString();
@@ -87,7 +114,8 @@ void MainWindow::btnStart_clicked() {
                     _downloader->_imagesExtensions = '(' + ext + ')';
                 }
                 else {
-                    QMessageBox::critical(this, "Error", "Image extension is incorrect!");
+                    QMessageBox::critical(this, "Error", "Image extensions is incorrect!");
+                    readyToStart = false;
                 }
             }
             else {
@@ -106,7 +134,8 @@ void MainWindow::btnStart_clicked() {
                     _downloader->_audioExtensions = '(' + ext + ')';
                 }
                 else {
-                    QMessageBox::critical(this, "Error", "Audio extension is incorrect!");
+                    QMessageBox::critical(this, "Error", "Audio extensions is incorrect!");
+                    readyToStart = false;
                 }
             }
             else {
@@ -125,7 +154,8 @@ void MainWindow::btnStart_clicked() {
                     _downloader->_videosExtensions = '(' + ext + ')';
                 }
                 else {
-                    QMessageBox::critical(this, "Error", "Videos extension is incorrect!");
+                    QMessageBox::critical(this, "Error", "Videos extensions is incorrect!");
+                    readyToStart = false;
                 }
             }
             else {
@@ -144,7 +174,8 @@ void MainWindow::btnStart_clicked() {
                     _downloader->_docsExtensions = '(' + ext + ')';
                 }
                 else {
-                    QMessageBox::critical(this, "Error", "Docs extension is incorrect!");
+                    QMessageBox::critical(this, "Error", "Docs extensions is incorrect!");
+                    readyToStart = false;
                 }
             }
             else {
@@ -155,12 +186,27 @@ void MainWindow::btnStart_clicked() {
             _downloader->_docsSelected = false;
         }
 
-        emit startDownload(url, mediaLists);
+        if (!(_downloader->_imagesSelected || _downloader->_audioSelected || _downloader->_videosSelected || _downloader->_docsSelected)) {
+            QMessageBox::warning(this, "Warning", "Select at least one of the filters to start parsing!");
+            readyToStart = false;
+        }
+        
     } 
     else {
         QMessageBox::critical(this, "Error", "URL not entered or invalid!");
+        readyToStart = false;
         _ui->parsingAnimation->clear();
         _ui->parsingAnimation->setPixmap(*_pixExpected);
+    }
+
+    if (readyToStart) {
+        _ui->parsingAnimation->setMovie(_movie);
+        _movie->start();     
+        _downloadThread->start();
+        emit startDownload(url, mediaLists);
+    }
+    else {
+        _ui->btnStart->setEnabled(true);
     }
 }
 
@@ -174,6 +220,8 @@ void MainWindow::btnStop_clicked() {
         _ui->parsingAnimation->setPixmap(*_pixExpected);
     }
     _downloader->_stopDownload = true;
+    _downloadThread->quit(); // stop thread
+    _downloadThread->wait(); // waiting cancelling thread
     _ui->btnStart->setEnabled(true);
 }
 
@@ -197,13 +245,59 @@ void MainWindow::readyToStart() {
     } 
     else {
         _ui->parsingAnimation->setPixmap(*_pixExpected);
+        if (_downloader->_htmlIsBad) {
+            QMessageBox::warning(this, "Warning", "HTML could not be retrieved from the specified url!");
+        }
+        else if (!_downloader->_parsingIsGood) {
+            QMessageBox::information(this, "Information", "The specified filters could not find media files");
+        }
     }
     _ui->btnStart->setEnabled(true);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     _downloader->_stopDownload = true;
-    _downloadThread->quit(); // Остановка работы потока
-    _downloadThread->wait(); // Ожидание завершения потока
+    _downloadThread->quit(); // stop thread
+    _downloadThread->wait(); // waiting cancelling thread
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::updateImagesCounter() {
+    _ui->imagesCount->setText(QString::number(_downloader->_imagesCount));
+}
+
+void MainWindow::updateAudioCounter() {
+    _ui->audioCount->setText(QString::number(_downloader->_audioCount));
+}
+
+void MainWindow::updateVideosCounter() {
+    _ui->videosCount->setText(QString::number(_downloader->_videosCount));
+}
+
+void MainWindow::updateDocsCounter() {
+    _ui->docsCount->setText(QString::number(_downloader->_docsCount));
+}
+
+void MainWindow::updateAllCounter() {
+    _ui->allCount->setText(QString::number(_downloader->_allCount));
+}
+
+void MainWindow::updateImagesAllCounter() {
+    _ui->imagesAllCount->setText(QString::number(_downloader->_imagesAllCount));
+}
+
+void MainWindow::updateAudioAllCounter() {
+    _ui->audioAllCount->setText(QString::number(_downloader->_audioAllCount));
+}
+
+void MainWindow::updateVideosAllCounter() {
+    _ui->videosAllCount->setText(QString::number(_downloader->_videosAllCount));
+}
+
+void MainWindow::updateDocsAllCounter() {
+    _ui->docsAllCount->setText(QString::number(_downloader->_docsAllCount));
+}
+
+void MainWindow::updateAllAllCounter() {
+    _ui->allAllCount->setText(QString::number(_downloader->_allAllCount));
 }
