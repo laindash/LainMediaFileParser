@@ -42,7 +42,7 @@ void DownloadWorker::downloadFile(QString &text) {
         }
         int counter = 1;
         while (QFile::exists(fullPath)) {
-            QString uniqueFileName = fileName + '(' + QString::number(counter) + ')';
+            QString uniqueFileName = '(' + QString::number(counter) + ')' + fileName;
             fullPath = (_directory.isEmpty() ? "grab" : _directory) + QDir::separator() + uniqueFileName;
             counter++;
         }
